@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Compression and Resizing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            padding: 20px;
+            background-color: lavender;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: #2e2e2e;
+            color: white;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid lightgray;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.dark-mode .container {
+            background-color: #3c3c3c;
+            border: 1px solid #555;
+        }
+
+        h2 {
+            text-align: center;
+            color: black;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        body.dark-mode h2 {
+            color: #f1f1f1;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        label:hover {
+            color: coral;
+        }
+
+        input[type="file"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid gray;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        input[type="file"]:hover {
+            background-color: LightBlue;
+            border-color: royalblue;
+        }
+
+        input[type="number"]:hover, select:hover {
+            background-color: LightGreen;
+            border-color: forestgreen;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        button:hover {
+            background-color: DarkGreen;
+            transform: scale(1.05);
+        }
+
+        .download-btn {
+            background-color: blue;
+        }
+
+        .download-btn:hover {
+            background-color: darkblue;
+            transform: scale(1.05);
+        }
+
+        .output {
+            margin-top: 20px;
+            text-align: center;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        body.dark-mode .output {
+            background-color: #4b4b4b;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .portrait {
+            width: auto;
+            height: 400px;
+        }
+
+        .landscape {
+            width: 400px;
+            height: auto;
+        }
+
+        .toggle-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .toggle-button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-button:hover {
+            background-color: #0056b3;
+        }
+
+        .scrolled h2 {
+            color: teal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Reduce Image Size and Dimensions</h2>
+        <form id="imageForm">
+            <label for="imageFile">Select Image:</label>
+            <input type="file" id="imageFile" accept="image/*" required>
+
+            <label for="fileSize">Choose Target Size (KB):</label>
+            <select id="fileSize">
+                <option value="20">20 KB</option>
+                <option value="50">50 KB</option>
+                <option value="100">100 KB</option>
+                <option value="200">200 KB</option>
+                <option value="custom">Custom Size (KB)</option>
+            </select>
+
+            <label for="customSize" style="display: none;">Custom Size (KB):</label>
+            <input type="number" id="customSize" style="display: none;" min="1" step="1">
+
+            <label for="dimensions">Image Dimensions:</label>
+            <select id="dimensionUnit">
+                <option value="pixels">Pixels</option>
+                <option value="mm">Millimeters</option>
+                <option value="cm">Centimeters</option>
+            </select>
+
+            <label for="width">Width:</label>
+            <input type="number" id="width" placeholder="Width" required>
+
+            <label for="height">Height (Auto-calculated):</label>
+            <input type="number" id="height" placeholder="Height" readonly>
+
+            <label for="orientation">Is the image in portrait or landscape?</label>
+            <select id="orientation" required>
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+            </select>
+
+            <button type="submit">Compress Image</button>
+        </form>
+
+        <div class="output" id="output">
+            <img id="previewImage" src="" alt="Compressed Image">
+            <a id="downloadLink" href="#" download style="display:none;">
+                <button class="download-btn">Download Compressed Image</button>
+            </a>
+        </div>
+    </div>
+
+    <div class="toggle-container">
+        <button class="toggle-button" id="toggleMode">Switch to Dark Mode</button>
+    </div>
+
+    <script>
+        const fileSizeSelect = document.getElementById('fileSize');
+        const customSizeInput = document.getElementById('customSize');
+        const imageForm = document.getElementById('imageForm');
+        const output = document.getElementById('output');
+        const previewImage = document.getElementById('previewImage');
+        const downloadLink = document.getElementById('downloadLink');
+        const orientationSelect = document.getElementById('orientation');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const toggleButton = document.getElementById('toggleMode');
+
+        let originalWidth, originalHeight;
+
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 0) {
+                document.body.classList.add('scrolled');
+                document.body.style.backgroundColor = 'LightSteelBlue'; // Set background color to 
+
+LightSteelBlue while scrolling
+            } else {
+                document.body.classList.remove('scrolled');
+                document.body.style.backgroundColor = 'lavender';
+            }
+        });
+
+        fileSizeSelect.addEventListener('change', function() {
+            if (fileSizeSelect.value === 'custom') {
+                customSizeInput.style.display = 'block';
+                customSizeInput.previousElementSibling.style.display = 'block';
+            } else {
+                customSizeInput.style.display = 'none';
+                customSizeInput.previousElementSibling.style.display = 'none';
+            }
+        });
+
+        document.getElementById('imageFile').addEventListener('change', function(event) {
+            const fileInput = event.target.files[0];
+            if (fileInput) {
+                const reader = new FileReader();
+                reader.readAsDataURL(fileInput);
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        originalWidth = img.width;
+                        originalHeight = img.height;
+                    };
+                };
+            }
+        });
+
+        widthInput.addEventListener('input', function() {
+            const width = parseInt(widthInput.value);
+            if (originalWidth && originalHeight) {
+                const aspectRatio = originalHeight / originalWidth;
+                const newHeight = Math.round(width * aspectRatio);
+                heightInput.value = newHeight;
+            }
+        });
+
+        imageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('imageFile').files[0];
+            const fileSize = fileSizeSelect.value === 'custom' ? customSizeInput.value : fileSizeSelect.value;
+            const width = parseInt(widthInput.value);
+            const height = parseInt(heightInput.value);
+            const orientation = orientationSelect.value;
+
+            if (!fileInput) {
+                output.innerHTML = '<p>Please upload an image file.</p>';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.readAsDataURL(fileInput);
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob(function(blob) {
+                        const compressedUrl = URL.createObjectURL(blob);
+                        previewImage.src = compressedUrl;
+                        previewImage.style.display = 'block';
+
+                        if (orientation === 'portrait') {
+                            previewImage.classList.add('portrait');
+                            previewImage.classList.remove('landscape');
+                        } else {
+                            previewImage.classList.add('landscape');
+                            previewImage.classList.remove('portrait');
+                        }
+
+                        const originalName = fileInput.name.split('.');
+                        const format = confirm("Do you want to save the image as .jpg? Click 'Cancel' for .jpeg.") ? 
+
+"jpg" : "jpeg";
+                        downloadLink.href = compressedUrl;
+                        downloadLink.download = `compressed-${originalName[0]}.${format}`;
+                        downloadLink.style.display = 'block';
+
+                        const imageBottom = previewImage.getBoundingClientRect().bottom + window.scrollY;
+                        window.scrollTo({ top: imageBottom, behavior: 'smooth' });
+
+                        setTimeout(() => {
+                            downloadLink.click();
+                        }, 2000);
+                    }, 'image/jpeg', fileSize / 100);
+                };
+            };
+        });
+
+        toggleButton.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                toggleButton.textContent = 'Switch to Light Mode';
+            } else {
+                toggleButton.textContent = 'Switch to Dark Mode';
+            }
+        });
+    </script>
+</body>
+</html>
