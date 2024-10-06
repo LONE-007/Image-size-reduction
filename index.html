@@ -231,9 +231,7 @@
         window.addEventListener('scroll', function() {
             if (window.scrollY > 0) {
                 document.body.classList.add('scrolled');
-                document.body.style.backgroundColor = 'LightSteelBlue'; // Set background color to 
-
-LightSteelBlue while scrolling
+                document.body.style.backgroundColor = 'LightSteelBlue'; // Set background color to LightSteelBlue while scrolling
             } else {
                 document.body.classList.remove('scrolled');
                 document.body.style.backgroundColor = 'lavender';
@@ -314,9 +312,7 @@ LightSteelBlue while scrolling
                         }
 
                         const originalName = fileInput.name.split('.');
-                        const format = confirm("Do you want to save the image as .jpg? Click 'Cancel' for .jpeg.") ? 
-
-"jpg" : "jpeg";
+                        const format = confirm("Do you want to save the image as .jpg? Click 'Cancel' for .jpeg.") ? "jpg" : "jpeg";
                         downloadLink.href = compressedUrl;
                         downloadLink.download = `compressed-${originalName[0]}.${format}`;
                         downloadLink.style.display = 'block';
